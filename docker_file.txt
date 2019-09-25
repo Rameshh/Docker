@@ -1,1 +1,27 @@
 * Virtualization: Run multiple application on same machine. bulky in size, running multiple virtual machine leads to unstable performance, bootup take a long time, VM's would not solve the problems like portability, software updates, continous integration and continous deployment.
+
+* Containerization is a type of virtualization which brings virtualization to the operating system level.
+* Reason to use containers.
+1. Containers have no guest OS and use the host's operating system. So, they share relevant libraries and resources as and when needed.
+2. Processing and execution of applications are very fast since application specific binaries and libraries of containers run on the host kernel.
+3. Booting up a container takes only a fraction of a second, and also containers are lightweight and faster than virtual machines.
+
+* Docker is a platform which packages an application and all its dependencies together in the form of containers.
+* Dockerfile: A Dockerfile is a text document which contains all the commands that a user can call on the command line to assemble an image. docker build to create an automated build to execute.
+
+* Docker Image: Docker Image can be compared to a template which is used to create Docker Containers.
+docker run to run the image and create container.
+Docker images are stored in the Docker Registry.
+
+* Docker Container: Docker Container is a running instance of a Docker image as they hold the entire package needed to run the application.
+
+* Docker Compose: Docker compose is a YAML file which contains details about the services, networks, and volumes for setting up the Docker application.
+
+* Docker Swarm: Docker Swarm is a technique to create and maintain a cluster of Docker Engines.
+
+* Docker file containes below commands.
+1. FROM: Specifies the image that has to be downloaded
+2. MAINTAINER: Metadata of the owner who owns the image
+3. RUN: Specifies the commands to be executed
+4. ENTRYPOINT: Specifies the command which will be executed first
+5. EXPOSE: Specifies the port on which the container is exposed 
