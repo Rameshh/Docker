@@ -24,4 +24,33 @@ Docker images are stored in the Docker Registry.
 2. MAINTAINER: Metadata of the owner who owns the image
 3. RUN: Specifies the commands to be executed
 4. ENTRYPOINT: Specifies the command which will be executed first
-5. EXPOSE: Specifies the port on which the container is exposed 
+5. EXPOSE: Specifies the port on which the container is exposed
+
+* Install Docker on Ubuntu
+1. Let us update the packages.
+   sudo apt-get update
+2. Install the recommended packages.
+   sudo apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual
+3. Install docker engine.
+   sudo apt-get install docker-engine
+4. Start the docker service.
+   sudo service docker start
+5. pull a CentOs image from docker hub and run the CentOs container.
+   sudo docker pull centos
+   sudo docker run -it centos
+   
+* Install Docker on CentOS
+1. Update the system packages and install the required dependencies.
+   sudo yum update
+   sudo yum install yum-utils device-mapper-persistent-data lvm2
+2. Add the Docker stable repository to your system.
+   sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+3. Install the Docker.
+   sudo yum install docker-ce
+4. Start the Docker daemon and enable it to automatically start at boot time.
+   sudo systemctl start docker
+   sudo systemctl enable docker
+5. To verify the Docker service is running.
+   sudo systemctl status docker
+6. To check Docker version.
+   docker -v
