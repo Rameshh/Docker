@@ -54,3 +54,48 @@ Docker images are stored in the Docker Registry.
    sudo systemctl status docker
 6. To check Docker version.
    docker -v
+   
+* What is Docker -> Docker is a containerization platform that packages your application and all its dependencies together
+in the form of a docker container to ensure that your application works seamlessly in any environment.
+
+* What is Container -> Docker Container is a standardized unit which can be created on the fly to deploy a particular
+application or environment.
+
+* Comparision between Virtual Machine(VM) and Docker Container(DC).
+1. Size -> VM required more size and DC required less size.
+2. Starup -> VM takes more time bootup and DC takes less time to bootup.
+3. Integration -> VM installtion of tools is hectic task and DC installation of tools is easy.
+
+* Docker's Workflow.
+1. Docker Daemon -> A persistent backgorund process that manages Docker images, containers, networks, and storage volumes. The Docker
+   daemon constantly listens for Docker API requests and processes them.
+2. Docker Engine REST API -> An API is used by applications to interact with the Docker daemon. It can be accessed by an HTTP client.
+3. Docker CLI -> A command-line interface client for interacting with the Docker daemon.    
+
+* Docker Architecture.
+  Docker Architecture includes a Docker client - used to trigger Docker commands, a Docker Host - running the Docker Daemon and a
+  Docker Registry - storing Docker Images. The Docker Daemon running within Docker host is responsible for the images and containers.
+ 
+* Docker Objects.
+1. Images -> Images are nothing but a read-only binary template that can build containers.
+2. Containers -> Containers are sort of encapsulated environments in which you run applications.
+3. Networks -> Which all the isolated container communicate.
+@ Mainly five network drivers in docker:
+  a. Bridge: It is the default network driver for a container.
+  b. Host: This driver removes the network isolation between docker containers and docker host.
+  c. Overlay: This network swarm services to communicate with each other.
+  d. None: This driver disables all the networking.
+  e. macvlan: This driver assigns mac address to containers to make them look like physical devices.
+4. Storage -> Store data within the writable layer of a container but it requires a storage driver.
+@ persistent storage, Docker offers four options:
+  a. Data Volumes: They provide the ability to create persistent storage, with the ability to rename volumes, list volumes, 
+     and also list the container that is associated with the volume.
+  b. Volume Container: It is an alternative approach wherein a dedicated container hosts a volume and to mount that 
+     volume to other containers.
+  c. Directory Mounts: Another option is to mount a host's local directory into a container.
+  d. Storage Plugins: Storage Plugins provide the ability to connect to external storage platforms.
+
+* Docker Registry.
+  Docker Registry is where the Docker Images are stored. The Registry can be either a user's local repository or a public 
+  repository like a Docker Hub allowing multiple users to collaborate in building an application. Docker registries are 
+  services that provide locations from where you can store and download images.
