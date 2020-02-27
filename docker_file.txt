@@ -99,3 +99,36 @@ application or environment.
   Docker Registry is where the Docker Images are stored. The Registry can be either a user's local repository or a public 
   repository like a Docker Hub allowing multiple users to collaborate in building an application. Docker registries are 
   services that provide locations from where you can store and download images.
+ 
+* Docker Commands
+1. docker -version
+   Currently installed version of docker.
+2. docker pull 
+   docker pull <image name> -> pull images from the docker repository(hub.docker.com).
+3. docker run
+   docker run -it -d <image name> -> Create a container from an image.
+4. docker ps
+   List the running containers.
+5. docker ps -a
+   All the running and exited containers.
+6. docker exec
+   docker exec -it <container id> bash -> Access the running container.
+7. docker stop
+   docker stop <container id> -> Stops a running container.
+8. docker kill
+   docker kill <container id> -> kills the container by stopping its execution immediately.
+9. docker commit
+   docker commit <container id> <username/imagename>
+   Creates a new image of an edited container on the local system.
+10. docker login
+    Used to login to the docker hub repository.
+11. docker push
+    docker push <username/image name> ->Push an image to the docker hub repository.
+12. docker images
+    Lists all the locally stored docker images.
+13. docker rm
+    docker rm <container id> -> Delete a stopped container.
+14. docker rmi
+    docker rmi <image-id> -> Delete an image from local storage.
+15. docker build
+    docker build <path to docker file> -> Build an image from a specified docker file.
