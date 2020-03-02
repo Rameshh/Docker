@@ -132,3 +132,85 @@ application or environment.
     docker rmi <image-id> -> Delete an image from local storage.
 15. docker build
     docker build <path to docker file> -> Build an image from a specified docker file.
+
+* Docker Swarm For Achieving High Availability
+* Docker swarm is a technique to create and maintain a cluster of Docker Engines. The Docker engines can be hosted 
+  on different nodes, and these nodes which are in remote locations form a cluster when connected in Swarm mode.
+* Why use Docker Swarm ?
+  Achieving high availability without any downtime is priority for every service provide out there.
+* Benefits Of Docker Swarm
+1. Docker Swarm does auto load-balancing for us. Hence, there is no need for DevOps engineer to route processing
+   requests to other nodes when one fails. The cluster's manager will automatically perform load balancing for us.
+2. Decentralized access means all nodes can be accessed easily from the manager.
+
+* Getting Started With Swarm mode
+  Docker Swarm is initiated by the manager, or the instance which starts the Swarm cluster becomes the manager.
+  1. To start the Swarm cluster
+     docker swarm init --advertise-addr ip-address
+  2. Swarm cluster is initiated, a token is generated at the manager's end. This token needs to be used by other
+     nodes to join the swarm cluster.
+     docker swarm join \ --token SWMTKN-1-0c0.....43-2j33.....neco \ 192.168.1.100:2377
+  3. Any node that joins the cluster can be later promoted to a manager. In case you want a docker engine to
+     join as a manager, execute the below command at the manager's end.
+     docker swarm join-token manager
+  4. And at a later point in time, if you want the token for a node to join the cluster, run the below command.
+     docker swarm join-token node
+  5. Run a docker node list command to check how many nodes have joined the cluster along with their status.
+     docker node ls
+
+* Creating A Docker Image For Angular App
+FROM node:6
+Run mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+COPY package.json /usr/src/spp
+RUN npm cache clean
+RUN npm install
+COPY . /usr/src/app
+EXPOSE 4200
+CMD ["npm", "start"]
+
+* To create the Docker image based on this Dockerfile, run the below command:
+  docker built -t angular-image .
+* Starting The Docker Swarm Service
+  docker service create --name "Angular-App-Container" -p 4200:4200 angular-image
+* Running the docker service list command by service is containerized
+  docker service ls
+* To identify on which the node/ manager, the app is hosted
+  docker service ps Angular-App-Container
+* Light on the details about the active container
+  docker ps
+* How many nodes are running
+  docker node ls
+* Container running in a particular host
+  docker node ps
+* Global MODE is a service of this container running at every single/ manager in the cluster. 
+  Remember to stop the current service/ container before to spanning another set of containers.  
+  docker service rm Angular-App-Container
+* The command to spin the container in Global mode is
+  docker service create --name "Angular-App-Container" -p 4200:4200 --mode global angular-image
+* docker service ps command
+  docker service ps Angular-App-Container
+* To have 2 replicas of the services running between the three container
+  docker service create --name "Angular-App-Container" -p 4200:4200 --replicas=2 angular-image
+* Docker Swarm For High Availability
+  1. Manually stopping the container from one of the nodes using this command:
+     docker stop Angular-App-Container
+  2. Run the above command on the node:Worker-1 where the container is running. From 
+     the manager run the command:
+     docker service ps Angular-App-Container
+* High Availability After Scaling Up The Services
+  Be it in replicated mode or global mode, we can scale up the number of services running in our cluster.
+  And even after scaling up, we will be able to retain high availability.
+  1. Assuming that we have either 2 or 3 replicas in our cluster, let us scale up the services to 5.
+     docker service scale Angular-App-Container=5
+  2. Running the docker service ps command along with the service name, you can see how the 5 services 
+     are load balanced and distributed on the 3 nodes. commands are:
+     docker service ls
+     docker service ps Angular-App-Container
+  3. We can drain the manager from hosting any application. The managers are only for managing 
+     other workers.
+     docker node update --availability drain manager-1
+  4. If the manager is now taking part in the cluster by running the docker node list command
+     and docker service ps command:
+     docker node ls
+     docker service ps Angular-App-Container
