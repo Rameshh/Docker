@@ -214,3 +214,62 @@ CMD ["npm", "start"]
      and docker service ps command:
      docker node ls
      docker service ps Angular-App-Container
+
+* Docker Netwroking 
+  We can pull images and we can upload own images onto the Docker Hub. Then, from Docker Hub, various
+  teams such as Quality Assurance or Prodcution teams will put that image and prepare their own containers.
+  These individual containers, communicate with each other through a network to perform the required 
+  actions, and this is nothing but Docker Networking.
+
+* Goals of Docker Networking
+1. Flexibility -> Docker Provides flexibility by enabling any number of applications on various 
+   platforms to communicate with each other.   
+2. Cross-Platform -> Docker can be easily used in cross-platform which works across various
+   servers with the help of Docker Swarm Clusters.
+3. Scalability -> Docker is a fully distributed network, which enables applications to grow
+   and scale individually while ensuring performance.
+4. Decentralized -> Docker uses a decentralized network, which enables the capability to have 
+   the applciations spread and highly available.
+5. User-Friendly -> Docker makes it easy to automate the deployment of services, making them
+   easy to use in day-to-day life.
+6. Support -> Docker offers out-of-the-box supports. So, the ability to use Docker Enterprise
+   Edition and get all of the functionality very easy and straightforward, makes Docker
+   platform to be very easy to be used.
+
+* Container Network Model(CNM)
+  CNM standardizes the steps required to provide networking for containers using multiple network
+  drivers. CNM requires a distributed key-value store like console to store the network configuration.
+* The CNM has interfaces for IPAM plugins and network plugins.
+* The IPAM plugin APIs are used to create/delete address pools and allocate/deallocate container IP
+  addresses, whereas the network plugin APIs are used to create/delete networks and add/remove
+  containers ffrom networks.
+
+* Container Network Model Objects
+1. Network Controller -> Provides the entry-point into Libnetwork that exposes simple APIs for
+   Docker Engine to allocate and manage networks.
+2. Driver -> Owns the network and is responsible for managing the network by having multiple
+   drivers participating to satisfy various use-cases and deploymnet scenarios.
+3. Network -> Provides connectivity between a group of endpoints that belong to the same network
+   and isolate from the rest.
+4. Endpoint -> Provides the connectivity for services exposed by a container in a network with other
+   services provided by other containers in the network. An endpoint represents a service and not
+   necessarily a particular container, Endpoint has a global scope within a cluster as well.
+5. Sandbox -> Created when users request to create an endpoint on a network. A Sandbox can have
+   multiple endpoints attached to different networks representing container's network
+   configuration such as IP-address, MAC-address, route, DNS.
+
+* Network Drivers
+1. Bridge -> The bridge network is a private defualt internal network created by docker on the host.
+   The Bridge networks are usually used when your applications run in standalone containers that
+   need to communicate.
+2. Host -> This drivers removes the network isolation between the docker host and the docker
+   containers to use the host's networking directly.
+3. None -> In this kind of network, containers are not attached to any network and do not have any 
+   access to the external network or other containers.
+4. Overlay -> Creates an internal private network that spans across all the nodes participating in
+   swarm cluster. So, Overlay networks facilitate communication between a swarm service and a
+   standalone container, or between two standalone containers on different Docker Daemons.
+5. Macvlan -> Allows you to assign a MAC address to a container, making it appear as a physical 
+   device on your netwrok. Then,  the Docker daemon routes traffic to containers by their MAC
+   addresses. Macvlan driver is the best choice when your are expected to be directly connected
+   to the physical network, rather than routed through the Docker host's network stack.
