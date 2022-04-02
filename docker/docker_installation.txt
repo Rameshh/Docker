@@ -1,0 +1,14 @@
+Installing Docker from Default Repositories
+1. Updating the Local Repository
+sudo apt update
+2. Uninstalling Old Docker Versions
+sudo apt-get remove docker docker-engine docker.io
+3. Installing Docker
+sudo apt install docker.io
+4. Checking Docker Installation
+docker --version
+5. Starting Docker Service 
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo systemctl status docker
+
