@@ -47,3 +47,61 @@ sudo systemctl status docker
     docker rm container name
 20. Address the random container naming issue
     docker run -d -p 8000:5000 --name python-server python-docker
+21. To see the dokcer logs use the container id or container name
+    docker logs container id
+22. To debugging docker using container id or container name
+    docker exec -it container id /bin/bash
+
+https://www.sentinelone.com/blog/create-docker-image/
+* How to Create a Docker Image From a Container
+1. Create a Base Container
+   The Docker create command will create a new container for us from the command line.
+   docker create --name nginx_base 80:80 nginx:alpine
+2. Inspect Images
+   docker images
+3. Inspect Containers
+   docker ps -a
+4. Start the Container
+   docker start nginx_base
+5. Modify the Running Container
+   docker cp index.html nginx_base:/usr/share/nginx/html/index.html
+6. Create an Image From a Container
+   docker commit nginx_base
+7. Tag the Images
+   docker tag image_id suraj_nginx
+8. Create Images With Tags
+   docker commit nginx_base suraj_nginx
+9. Delete the Original Container
+   docker ps
+   docker stop nginx_base
+   docker rm nginx_base
+
+   let’s create a new container based on the image we just created and start it.
+   docker run --name nginx_suraj -d -p 80:80 suraj_nginx
+
+10. Look at Running Containers
+    docker ps
+    docker stop nginx_base
+
+11. Consider Your Options
+    docker run --name nginx_base --rm -d -p 80:80 nginx:alpine
+    This command will run the image nginx:alpine with the name nginx_base; the creation of the image will be included in the command execution.
+    The –rm will cause the container to be deleted when it is shut down. The -d tells the command line client to run in detached mode. 
+    This will allow us to run other commands from the same terminal.
+
+* Pushing images and tags into repository
+1. Log into the Docker public registry from your local machine terminal using Docker CLI
+   docker login
+2. Tag the image
+   docker tag python-docker:latest rameshhb/python-docker:latest
+3. Publish the image
+   docker push rameshhb/python-docker
+4. Creating the tag
+   docker tag 	python-docker:latest rameshhb/python-docker:v1.0-python-docker
+5. Pushing tag into the repository
+   docker push rameshhb/python-docker:v1.0-python-docker
+6. Pulling latest image or tag from repository
+   docker pull rameshhb/python-docker
+7. Running the docker image
+   docker run -it rameshhb/python-docker
+
