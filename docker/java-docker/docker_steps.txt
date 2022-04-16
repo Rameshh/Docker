@@ -1,0 +1,43 @@
+1. mkdir java-docker
+   git clone git clone https://github.com/spring-projects/spring-petclinic.git
+   cd spring-petclinic
+2. Create a .dockerignore file, This line excludes the target directory.
+3. Create Dockerfile.java file
+   vim Dockerfile.java
+4. Build an image
+   docker build --tag java-docker -f Dockerfile.java .
+5. Run your image as a container
+   To name a container, we just need to pass the --name flag to the docker run command.
+   docker run -d -p 8080:8000 --name springboot-server java-docker
+
+* Run a database in a container
+1. Let’s create our volumes now. We’ll create one for the data and one for configuration of MySQL.
+   docker volume create mysql_data
+   docker volume create mysql_config
+2. Now we’ll create a network that our application and database will use to talk to each other.
+   docker network create mysqlnet
+3. We only need to add the MySQL profile as an argument to the CMD definition.
+   CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.profiles=mysql"]
+4. Let’s build our image
+   docker build --tag java-docker -f Dockerfile.java .
+
+* Use Compose to develop locally
+1. create a new file named docker-compose.dev.yml
+   vim docker-compose.dev.yml
+2. Now, to start our application and to confirm that it is running properly.
+   docker-compose -f docker-compose.dev.yml up --build
+curl  --request GET \
+  --url http://localhost:8090/vets \
+  --header 'content-type: application/json'
+  
+* Refactor Dockerfile to run tests
+  Docker command to start the container and run tests:
+  docker run -it --rm --name springboot-test java-docker ./mvnw test
+  
+* Multi-stage Dockerfile for testing
+1. We will run the docker build command as above, but this time we will add the --target test flag so that we specifically run the test build stage.
+   docker build -t java-docker --target test -f Dockerfile.java .
+2. Now that our test image is built, we can run it as a container and see if our tests pass.
+   docker run -it --rm --name springboot-test java-docker
+3. Now, to run our tests, we just need to run the docker build command as above.
+   docker build -t java-docker --target test -f Dockerfile.java .
