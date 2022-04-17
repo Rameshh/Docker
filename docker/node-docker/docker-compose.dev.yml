@@ -1,0 +1,28 @@
+version: '2.2'
+
+services:
+ notes:
+  build:
+   context: app
+   dockerfile: node.Dockerfile
+   context: .
+  ports:
+   - 8002:8002
+   - 9229:9229
+  environment:
+   - SERVER_PORT=8002
+   - CONNECTIONSTRING=mongodb://mongo:27017/notes
+  volumes:
+   - ./:/app
+  command: npm run debug
+
+ mongo:
+  image: mongo:4.2.8
+  ports:
+   - 27018:27018
+  volumes:
+   - mongodb:/data/db
+   - mongodb_config:/data/configdb
+volumes:
+ mongodb:
+ mongodb_config:

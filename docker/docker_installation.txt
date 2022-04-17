@@ -12,46 +12,6 @@ sudo systemctl start docker
 sudo systemctl enable docker
 sudo systemctl status docker
 
-* Docker image creation using the Flask framework
-1. mkdir python-docker
-2. cd python-docker
-3. pip3 install Flask
-4. pip3 freeze | grep Flask >> requirements.txt
-5. touch app.py
-6. touch Dockerfile
-7. Building an image
-   docker build --tag python-docker .
-8. Viewing local images
-   docker images
-9. To create a new tag for the image
-   docker tag python-docker:latest python-docker:v1.0.0
-10. Removing the tag
-    docker rmi python-docker:v1.0.0
-11. Running image as a container
-    docker run python-docker
-12. Publish a port for our container
-    docker run --publish 8000:5000 python-docker
-13. Run in detached mode
-    docker run -d -p 8000:5000 python-docker
-14. List containers
-    docker ps
-15. To stop the container(container id or container name)
-    docker stop containe name
-16. To see all the running and stopped containers provide --all or -a
-    docker ps -a
-17. To start the container
-    docker start container name
-18. To restart the container
-    docker restart container name
-19. To remove a container(provide multiple containers)
-    docker rm container name
-20. Address the random container naming issue
-    docker run -d -p 8000:5000 --name python-server python-docker
-21. To see the dokcer logs use the container id or container name
-    docker logs container id
-22. To debugging docker using container id or container name
-    docker exec -it container id /bin/bash
-
 https://www.sentinelone.com/blog/create-docker-image/
 * How to Create a Docker Image From a Container
 1. Create a Base Container

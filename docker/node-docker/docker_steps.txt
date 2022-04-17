@@ -1,0 +1,131 @@
+https://docs.docker.com/language/nodejs/build-images/
+* Simple application for node.js
+1. mkdir node-docker
+2. cd node-docker
+3. npm init -y
+4. npm install ronin-server ronin-mocks
+5. create server.js file
+6. Create a .dockerignore file and and add node_modules directory in it.
+7. Building an image
+   docker build --tag node-docker -f node.Dockerfile .
+8. Viewing local images
+   docker images
+9. To create a new tag for the image
+   docker tag node-docker:latest node-docker:v1.0.0
+10. Removing the tag
+    docker rmi node-docker:v1.0.0
+11. Running image as a container
+    docker run node-docker
+12. Publish a port for our container
+    docker run --publish 8090:8000 node-docker
+13. Run in detached mode
+    docker run -d -p 8090:9000 node-docker
+14. List containers
+    docker ps
+15. To stop the container(container id or container name)
+    docker stop containe name
+16. To see all the running and stopped containers provide --all or -a
+    docker ps -a
+17. To start the container
+    docker start container name
+18. To restart the container
+    docker restart container name
+19. To remove a container(provide multiple containers)
+    docker rm container name
+20. Address the random container naming issue
+    docker run -d -p 8090:8000 --name node-rest-server python-docker
+21. To see the dokcer logs use the container id or container name
+    docker logs container id
+22. To debugging docker using container id or container name
+    docker exec -it container id /bin/bash
+
+* Run a database in a container
+1. Let’s create our volumes now. We’ll create one for the data and one for configuration of MongoDB.
+   docker volume create mongodb
+   docker volume create mongodb_config
+2. Now we’ll create a network that our application and database will use to talk to each other.
+   docker network create mongodb
+3. Now we can run MongoDB in a container and attach to the volumes and network we created above. 
+   Docker will pull the image from Hub and run it for you locally.
+   docker run -it --rm -d -v mongodb:/data/db \
+   -v mongodb_config:/data/configdb -p 27017:27017 \
+   --network mongodb \
+   --name mongodb \
+   mongo
+4. Okay, now that we have a running MongoDB, let’s update server.js to use MongoDB and not an in-memory data store.
+5. First let’s add the ronin-database module to our application using npm.
+   npm install ronin-database
+6. Now we can build our image.
+   docker build --tag node-docker -f node.Dockerfile .
+7. Now, let’s run our container. But this time we’ll need to set the CONNECTIONSTRING environment variable so our 
+   application knows what connection string to use to access the database. 
+   docker run \
+   -it --rm -d \
+   --network mongodb \
+   --name rest-server \
+   -p 8000:8000 \
+   -e CONNECTIONSTRING=mongodb://mongodb:27017/notes \
+   node-docker   
+   
+* Use Compose to develop locally
+1. create a new file named docker-compose.dev.yml. Copy and paste the following commands into the file.
+2. Open the package.json file and add the following line to the scripts section:
+   "debug": "nodemon --inspect=0.0.0.0:9229 server.js"
+3. Let’s run the following command in a terminal to install nodemon into our project directory.
+   npm install nodemon
+4. Let’s start our application and confirm that it is running properly.
+   docker-compose -f docker-compose.dev.yml up --build
+   We pass the --build flag so Docker will compile our image and then start the containers.
+   NOTE: If we get below error while building docker-compose.dev.yml file
+   Building notes
+   ERROR: Cannot locate specified Dockerfile: Dockerfile
+   Answer: We need to in the build section of the docker-compose.dev.yml for context and docker file.
+   build:
+    context: app
+    dockerfile: node.Dockerfile
+    context:   
+
+* Run your Tests using Node.js and Mocha frameworks
+1. Create a test
+   Let’s define a Mocha test in a ./test directory within our application.  
+   mkdir -p test
+   
+   Save the following code in ./test/test.js.
+   var assert = require('assert');
+   describe('Array', function() {
+     describe('#indexOf()', function() {
+       it('should return -1 when the value is not present', function() {
+         assert.equal([1, 2, 3].indexOf(4), -1);
+       });
+     });
+   });
+   
+2. Running locally and testing the application
+   Let’s build our Docker image and confirm everything is running properly. Run the following command to build and run your Docker image in a container.
+   docker-compose -f docker-compose.dev.yml up --build
+3. Run the following command to install Mocha and add it to the developer dependencies:
+   npm install --save-dev mocha
+4. Update package.json and Dockerfile to run tests
+   We’ll override the CMD that is inside of our container with npm run test. This will invoke the command that is in the package.json file under the
+   “script” section.
+   "test": "mocha ./**/*.js",
+   "start": "nodemon --inspect=0.0.0.0:9229 server.js" 
+5. Below is the Docker command to start the container and run tests:
+   docker-compose -f docker-compose.dev.yml run notes npm run test
+
+* Multi-stage Dockerfile for testing
+1. In addition to running the tests on command, we can run them when we build our image, using a multi-stage Dockerfile. 
+   The following Dockerfile will run our tests and build our production image.
+2. Now let’s rebuild our image and run our tests. We will run the same docker build command as above but this time we will add 
+   the --target test flag so that we specifically run the test build stage.
+   docker build -t node-docker --target test -f node.Dockerfile .
+3. Now that our test image is built, we can run it in a container and see if our tests pass.
+   docker run -it --rm -p 8003:8003 node-docker
+4. Update your Dockerfile with the highlighted line below.
+5. Now to run our tests, we just need to run the docker build command as above.
+   docker build -t node-docker --target test -f node.Dockerfile .
+6. Open the test/test.js file and change line 5 as follows.
+   assert.equal([1, 2, 3].indexOf(3), -1);
+7. Now, run the same docker build command from above and observe that the build fails and the failing testing information is printed to the console.
+   docker build -t node-docker --target test -f node.Dockerfile .
+      

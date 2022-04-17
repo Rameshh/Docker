@@ -16,9 +16,17 @@
    docker volume create mysql_config
 2. Now we’ll create a network that our application and database will use to talk to each other.
    docker network create mysqlnet
-3. We only need to add the MySQL profile as an argument to the CMD definition.
+3. Now, let’s run MySQL in a container and attach to the volumes and network we created above. Docker pulls the image from Hub and runs it locally.
+   docker run -it --rm -d -v mysql_data:/var/lib/mysql \
+   -v mysql_config:/etc/mysql/conf.d \
+   --network mysqlnet \
+   --name mysqlserver \
+   -e MYSQL_USER=petclinic -e MYSQL_PASSWORD=petclinic \
+   -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=petclinic \
+   -p 3306:3306 mysql:8.0.23
+4. We only need to add the MySQL profile as an argument to the CMD definition.
    CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.profiles=mysql"]
-4. Let’s build our image
+5. Let’s build our image
    docker build --tag java-docker -f Dockerfile.java .
 
 * Use Compose to develop locally
@@ -26,8 +34,8 @@
    vim docker-compose.dev.yml
 2. Now, to start our application and to confirm that it is running properly.
    docker-compose -f docker-compose.dev.yml up --build
-curl  --request GET \
-  --url http://localhost:8090/vets \
+   curl  --request GET \
+  --url http://localhost:8080/vets \
   --header 'content-type: application/json'
   
 * Refactor Dockerfile to run tests
@@ -39,5 +47,4 @@ curl  --request GET \
    docker build -t java-docker --target test -f Dockerfile.java .
 2. Now that our test image is built, we can run it as a container and see if our tests pass.
    docker run -it --rm --name springboot-test java-docker
-3. Now, to run our tests, we just need to run the docker build command as above.
-   docker build -t java-docker --target test -f Dockerfile.java .
+   
