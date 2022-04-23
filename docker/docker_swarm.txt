@@ -1,0 +1,100 @@
+What is a swarm -> A swarm consists of multiple Docker hosts which run in swarm mode and act as managers (to manage membership and delegation) and workers (which run swarm services).
+One of the key advantages of swarm services over standalone containers is that you can modify a service’s configuration, including the networks and volumes it is connected to, without the need to manually restart the service. Docker will update the configuration, stop the service tasks with the out of date configuration, and create new ones matching the desired configuration.
+When Docker is running in swarm mode, you can still run standalone containers on any of the Docker hosts participating in the swarm, as well as swarm services. A key difference between standalone containers and swarm services is that only swarm managers can manage a swarm, while standalone containers can be started on any daemon. Docker daemons can participate in a swarm as managers, workers, or both.
+Nodes -> A node is an instance of the Docker engine participating in the swarm. You can also think of this as a Docker node.
+To deploy your application to a swarm, you submit a service definition to a manager node. The manager node dispatches units of work called tasks to worker  nodes.
+Manager nodes also perform the orchestration and cluster management functions required to maintain the desired state of the swarm. Manager nodes elect a single leader to conduct orchestration tasks.
+Worker nodes receive and execute tasks dispatched from manager nodes. By default manager nodes also run services as worker nodes, but you can configure them to run manager tasks exclusively and be manager-only nodes.
+Services -> A service is the definition of the tasks to execute on the manager or worker nodes. It is the central structure of the swarm system and the primary root of user interaction with the swarm.
+tasks -> A task carries a Docker container and the commands to run inside the container. It is the atomic scheduling unit of swarm.
+Load balancing -> The swarm manager uses ingress load balancing to expose the services you want to make available externally to the swarm.
+
+* Create a swarm
+1. Run the following command to create a new swarm
+   docker swarm init --advertise-addr 192.168.0.124(laptop ip address)
+2. Run docker info to view the current state of the swarm
+   docker info
+3. Run the docker node ls command to view information about nodes
+   docker node ls
+
+* Add nodes to the swarm
+1. Run the command produced by the docker swarm init output from the Create a swarm tutorial step to create a worker node joined to the existing swarm
+   in the node machine.
+   docker swarm join --token SWMTKN-1-0oz4lvkvpm2907przn4ysb9dyrc4ud8jqxdk78ajoazsin65e5-56ybf7yk2ygwczw6xxc81e7q9 192.168.0.124:2377
+2. run the docker node ls command to see the worker nodes
+   docker node ls
+   
+* Deploy a service to the swarm
+1. Run the following command   
+   docker service create --replicas 1 --name helloworld alpine ping docker.com
+2. Run docker service ls to see the list of running services
+   docker service ls
+   
+* Inspect a service on the swarm
+1. Display the details about a service in an easily readable format
+   docker service inspect --pretty <SERVICE-ID>
+2. To see the details on the helloworld service
+   docker service inspect --pretty helloworld
+3. To return the service details in json format, run the same command without the --pretty flag   
+   docker service inspect helloworld
+4. Run docker service ps <SERVICE-ID> to see which nodes are running the service
+   docker service ps helloworld
+5. Run docker ps on the node where the task is running to see details about the container for the task
+   docker ps
+ 
+* Scale the service in the swarm
+1. Run the following command to change the desired state of the service running in the swarm
+   docker service scale <SERVICE-ID>=<NUMBER-OF-TASKS>
+   docker service scale helloworld=5
+2. Run docker service ps <SERVICE-ID> to see the updated task list
+   docker service ps helloworld
+3. Run docker ps to see the containers running on the node where you’re connected
+   docker ps
+
+* Delete the service running on the swarm
+1. Run docker service rm helloworld to remove the helloworld service
+   docker service rm helloworld
+2. Run docker service inspect <SERVICE-ID> to verify that the swarm manager removed the service. The CLI returns a message that the service is not found
+   docker service inspect helloworld
+
+* Apply rolling updates to a service
+1. Deploy your Redis tag to the swarm and configure the swarm with a 10 second update delay 
+   docker service create --replicas 3 --name redis --update-delay 10s redis:3.0.6
+2. Inspect the redis service
+   docker service inspect --pretty redis
+3. Now you can update the container image for redis. The swarm manager applies the update to nodes according to the UpdateConfig policy
+   docker service update --image redis:3.0.7 redis
+4. Run docker service inspect --pretty redis to see the new image in the desired state
+   docker service inspect --pretty redis
+5. To restart a paused update run docker service update <SERVICE-ID>
+   docker service update redis
+6. Run docker service ps <SERVICE-ID> to watch the rolling update
+   docker service ps redis
+   
+* Drain a node on the swarm
+1. If you aren’t still running the redis service from the rolling update tutorial, start it now
+   docker service create --replicas 3 --name redis --update-delay 10s redis:3.0.6
+2. Run docker service ps redis to see how the swarm manager assigned the tasks to different nodes
+   docker service ps redis
+3. Run docker node update --availability drain <NODE-ID> to drain a node that had a task assigned to it
+   docker node update --availability drain devops
+4. Inspect the node to check its availability
+   docker node inspect --pretty devops
+5. Run docker service ps redis to see how the swarm manager updated the task assignments for the redis service
+   docker service ps redis
+6. Run docker node update --availability active <NODE-ID> to return the drained node to an active state
+   docker node update --availability active devops
+
+* Use swarm mode routing mesh
+1. Publish a port for a service
+   docker service create --name my-web --publish published=8080,target=80 --replicas 2 nginx
+2. You can use docker service inspect to view the service’s published port. For instance
+   docker service inspect --format="{{json .Endpoint.Spec.Ports}}" my-web
+3. Publish a port for TCP only or UDP only
+   TCP and UDP
+   Long syntax:
+   docker service create --name dns-cache --publish published=53,target=53 --publish published=53,target=53,protocol=udp dns-cache
+   Short syntax:
+   docker service create --name dns-cache -p 53:53 -p 53:53/udp dns-cache
+4. Bypass the routing mesh
+   docker service create --name dns-cache --publish published=53,target=53,protocol=udp,mode=host --mode global dns-cache 
