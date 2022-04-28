@@ -97,4 +97,18 @@ Load balancing -> The swarm manager uses ingress load balancing to expose the se
    Short syntax:
    docker service create --name dns-cache -p 53:53 -p 53:53/udp dns-cache
 4. Bypass the routing mesh
-   docker service create --name dns-cache --publish published=53,target=53,protocol=udp,mode=host --mode global dns-cache 
+   docker service create --name dns-cache --publish published=53,target=53,protocol=udp,mode=host --mode global dns-cache
+
+* Promote or demote a node
+1. To promote a node or set of nodes, run docker node promote from a manager node
+   docker node promote devops
+2. To demote a node or set of nodes, run docker node demote from a manager node
+   docker node demote devops
+
+* Installing and using a plugin
+1. Install the sshfs plugin
+   docker plugin install vieux/sshfs
+2. Check that the plugin is enabled in the output of docker plugin ls
+   docker plugin ls
+3. Remove the plugin
+   docker plugin remove vieux/sshfs:latest -f

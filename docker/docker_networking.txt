@@ -1,0 +1,214 @@
+* Networking overview
+We can pull images and we can upload own images onto the Docker Hub. Then, from Docker Hub, various teams such as Quality Assurance or Prodcution teams will put that image and prepare their own containers.These individual containers, communicate with each other through a network to perform the required actions, and this is nothing but Docker Networking.
+
+* Goals of Docker Networking
+1. Flexibility -> Docker Provides flexibility by enabling any number of applications on various platforms to communicate with each other.   
+2. Cross-Platform -> Docker can be easily used in cross-platform which works across various servers with the help of Docker Swarm Clusters.
+3. Scalability -> Docker is a fully distributed network, which enables applications to grow and scale individually while ensuring performance.
+4. Decentralized -> Docker uses a decentralized network, which enables the capability to have the applciations spread and highly available.
+5. User-Friendly -> Docker makes it easy to automate the deployment of services, making them easy to use in day-to-day life.
+6. Support -> Docker offers out-of-the-box supports. So, the ability to use Docker Enterprise Edition and get all of the functionality very easy and
+   straightforward, makes Docker platform to be very easy to be used.
+
+* Container Network Model Objects
+1. Network Controller -> Provides the entry-point into Libnetwork that exposes simple APIs for Docker Engine to allocate and manage networks.
+2. Driver -> Owns the network and is responsible for managing the network by having multiple drivers participating to satisfy various use-cases
+   and deploymnet   scenarios.
+3. Network -> Provides connectivity between a group of endpoints that belong to the same network and isolate from the rest.
+4. Endpoint -> Provides the connectivity for services exposed by a container in a network with other services provided by other containers in 
+   the network. An   endpoint represents a service and not necessarily a particular container, Endpoint has a global scope within a cluster as well.
+5. Sandbox -> Created when users request to create an endpoint on a network. A Sandbox can have multiple endpoints attached to different networks 
+   representing container's network configuration such as IP-address, MAC-address, route, DNS.
+   
+* Network drivers
+1. bridge: The default network driver. If you don’t specify a driver, this is the type of network you are creating. Bridge networks are usually 
+   used when your applications run in standalone containers that need to communicate.
+2. host: For standalone containers, remove network isolation between the container and the Docker host, and use the host’s networking directly.
+3. overlay: Overlay networks connect multiple Docker daemons together and enable swarm services to communicate with each other. You can also use 
+   overlay networks to facilitate communication between a swarm service and a standalone container, or between two standalone containers on 
+   different Docker daemons. This strategy removes the need to do OS-level routing between these containers.
+4. ipvlan: IPvlan networks give users total control over both IPv4 and IPv6 addressing. The VLAN driver builds on top of that in giving operators 
+   complete control of layer 2 VLAN tagging and even IPvlan L3 routing for users interested in underlay network integration.
+5. macvlan: Macvlan networks allow you to assign a MAC address to a container, making it appear as a physical device on your network. 
+   The Docker daemon routes traffic to containers by their MAC addresses. Using the macvlan driver is sometimes the best choice when dealing 
+   with legacy applications that expect to be directly connected to the physical network, rather than routed through the Docker host’s network stack.
+6. none: For this container, disable all networking. Usually used in conjunction with a custom network driver. none is not available for swarm services.
+7. Network plugins: You can install and use third-party network plugins with Docker. These plugins are available from Docker Hub or from third-party vendors.
+
+* Manage a user-defined bridge
+1. Create a user-defined bridge network
+   docker network create my-net
+2. Remove a user-defined bridge network
+   docker network rm my-net
+3. Connect a container to a user-defined bridge   
+   docker create --name my-nginx --network my-net --publish 8080:80 nginx:latest
+4. To connect a running container to an existing user-defined bridge
+   docker network connect my-net my-nginx
+5. Disconnect a container from a user-defined bridge
+   docker network disconnect my-net my-nginx
+  
+* Use Overlay Network  
+1. To create an overlay network for use with swarm services
+   docker network create -d overlay my-overlay
+2. To create an overlay network which can be used by swarm services or standalone containers to communicate with other standalone containers 
+   running on other Docker daemons, add the --attachable flag
+   docker network create -d overlay --attachable my-attachable-overlay
+3. Swarm mode overlay networks and standalone containers
+   docker network create --opt encrypted --driver overlay --attachable my-attachable-multi-host-network
+   
+* Customize the default ingress network
+1. Inspect the ingress network using docker network inspect ingress
+   docker network inspect ingress
+2. Remove the existing ingress network
+   docker network rm ingress
+3. Create a new overlay network using the --ingress flag, along with the custom options you want to set. This example sets the MTU to 1200, 
+   sets the subnet to 10.11.0.0/16, and sets the gateway to 10.11.0.2
+   docker network create --driver overlay --ingress --subnet=10.11.0.0/16 --gateway=10.11.0.2 --opt com.docker.network.driver.mtu=1200 my-ingress
+
+* Disable networking for a container
+1. Create the container
+   docker run --rm -dit --network none --name no-net-alpine alpine:latest ash
+2. Check the container’s network stack, by executing some common networking commands within the container. Notice that no eth0 was created
+   docker exec no-net-alpine ip link show
+   docker exec no-net-alpine ip route
+3. Stop the container. It is removed automatically because it was created with the --rm flag
+   docker stop no-net-alpine
+   
+* Networking with standalone containers
+1. Use the default bridge network
+   docker network ls
+2. Start two alpine containers running ash, which is Alpine’s default shell rather than bash
+   docker run -dit --name alpine1 alpine ash
+   docker run -dit --name alpine2 alpine ash
+ Check that both containers are actually started
+   docker container ls or docker ps
+3. Inspect the bridge network to see what containers are connected to it
+   docker network inspect bridge
+4. The containers are running in the background. Use the docker attach command to connect to alpine1
+   docker attach apline1
+   / #
+ The prompt changes to # to indicate that you are the root user within the container. Use the ip addr show command to show the network 
+ interfaces for alpine1 as they look from within the container
+   ip addr show
+5. From within alpine1, make sure you can connect to the internet by pinging google.com. The -c 2 flag limits the command to two ping attempts
+   ping -c 2 google.com
+6. Now try to ping the second container. First, ping it by its IP address, 172.17.0.3
+   ping -c 2 172.17.0.3
+ This succeeds. Next, try pinging the alpine2 container by container name. This will fail
+   ping -c 2 alpine2
+7. Detach from alpine1 without stopping it by using the detach sequence, CTRL + p CTRL + q
+   CTRL + p q
+8. Stop and remove both containers
+   docker container stop alpine1 alpine2
+   docker container rm alpine1 alpine2
+   
+* Use user-defined bridge networks
+1. Create the alpine-net network. You do not need the --driver bridge flag since it’s the default, but this example shows how to specify it.
+   docker network create --driver bridge alpine-net
+2. List Docker’s networks:
+   docker network ls
+ Inspect the alpine-net network. This shows you its IP address and the fact that no containers are connected to it.
+   docker network inspect alpine-net
+3. Create your four containers. Notice the --network flags. You can only connect to one network during the docker run command, 
+   so you need to use docker network connect afterward to connect alpine4 to the bridge network as well.
+   docker run -dit --name alpine1 --network alpine-net alpine ash
+   docker run -dit --name alpine2 --network alpine-net alpine ash
+   docker run -dit --name alpine3 alpine ash
+   docker run -dit --name alpine4 --network alpine-net alpine ash
+   docker network connect bridge alpine4
+ Verify that all containers are running.
+   docker container ls
+4. Inspect the bridge network and the alpine-net network again.
+   docker network inspect bridge
+   Containers alpine3 and alpine4 are connected to the bridge network.
+   docker network inspect alpine-net
+   Containers alpine1, alpine2, and alpine4 are connected to the alpine-net network.
+5. On user-defined networks like alpine-net, containers can not only communicate by IP address, but can also resolve a container name to an IP address. 
+   This capability is called automatic service discovery. Let’s connect to alpine1 and test this out. alpine1 should be able to resolve alpine2 and
+   alpine4(and alpine1, itself) to IP addresses.
+   docker container attach alpine1
+   / #
+   ping -c 2 alpine2
+   ping -c 2 alpine4
+   ping -c 2 alpine1
+6. From alpine1, you should not be able to connect to alpine3 at all, since it is not on the alpine-net network.
+   ping -c 2 alpine3
+ Not only that, but you can’t connect to alpine3 from alpine1 by its IP address either.
+   ping -c 2 172.17.0.2
+ Detach from alpine1 using detach sequence, CTRL + p CTRL + q.
+   CTRL + p q
+7. Remember that alpine4 is connected to both the default bridge network and alpine-net. It should be able to reach all of the other containers. 
+   However, you will need to address alpine3 by its IP address. Attach to it and run the tests.
+   docker container attach alpine4
+   / #
+   ping -c 2 alpine1
+   ping -c 2 alpine2
+   ping -c 2 alpine3
+   ping -c 2 172.17.0.2
+   ping -c 2 alpine4
+8. As a final test, make sure your containers can all connect to the internet by pinging google.com. You are already attached to alpine4 so start 
+   by trying from there. Next, detach from alpine4 and connect to alpine3 (which is only attached to the bridge network) and try again. Finally, 
+   connect to alpine1 (which is only connected to the alpine-net network) and try again.
+   ping -c 2 google.com
+   CTRL + p q
+ docker container attach alpine3
+   ping -c 2 google.com
+   CTRL + p q
+ docker container attach alpine1
+   ping -c 2 google.com
+   CTRL + p q
+9. Stop and remove all containers and the alpine-net network.
+   docker container stop alpine1 alpine2 alpine3 alpine4
+   docker container rm alpine1 alpine2 alpine3 alpine4
+   docker network rm alpine-net
+
+* Networking using the host network
+1. Create and start the container as a detached process. The --rm option means to remove the container once it exits/stops. 
+   The -d flag means to start the container detached (in the background).
+   docker run --rm -d --network host --name my_nginx nginx
+2. Access Nginx by browsing to http://localhost:80/.
+3. Examine your network stack using the following commands:
+   . Examine all network interfaces and verify that a new one was not created.
+     ip addr show
+   . Verify which process is bound to port 80, using the netstat command. You need to use sudo because the process is owned by the Docker daemon user 
+     and you otherwise won’t be able to see its name or PID.
+    sudo netstat -tulpn | grep :80
+4. Stop the container. It will be removed automatically as it was started using the --rm option.
+   docker container stop my_nginx
+   
+* Networking with overlay networks
+  Create the swarm
+1. On manager. initialize the swarm. If the host only has one network interface, the --advertise-addr flag is optional.
+   docker swarm init --advertise-addr=192.168.0.124
+2. On worker-1, join the swarm. If the host only has one network interface, the --advertise-addr flag is optional.
+   docker swarm join --token SWMTKN-1-0gx9dnlfz58qem0q0fx3ur9qcs4y55yvrkwgn2i1u1b9456bgj-2zn17oncukhipqejjk0muza7b 192.168.0.124:2377
+3. On manager, list all the nodes. This command can only be done from a manager.
+   docker node ls
+ You can also use the --filter flag to filter by role:
+   docker node ls --filter role=manager
+   docker node ls --filter role=worker
+4. List the Docker networks on manager, worker-1, and worker-2 and notice that each of them now has an overlay network called ingress and a bridge 
+   network called docker_gwbridge. Only the listing for manager is shown here:
+   docker network ls
+
+* Create the services
+1. On manager, create a new overlay network called nginx-net:
+   docker network create -d overlay nginx-net
+2. On manager, create a 5-replica Nginx service connected to nginx-net. The service will publish port 80 to the outside world. All of the service 
+   task containers can communicate with each other without opening any ports.
+   docker service create --name my-nginx --publish target=80,published=80 --replicas=5 --network nginx-net nginx
+3. Run docker service ls to monitor the progress of service bring-up, which may take a few seconds.
+   docker service ls
+4. Inspect the nginx-net network on manager, worker-1, and worker-2. Remember that you did not need to create it manually on worker-1 and worker-2
+   because Docker created it for you. The output will be long, but notice the Containers and Peers sections. Containers lists all service tasks 
+   (or standalone containers) connected to the overlay network from that host.
+5. From manager, inspect the service using docker service inspect my-nginx and notice the information about the ports and endpoints used by the service.
+6. Create a new network nginx-net-2, then update the service to use this network instead of nginx-net:
+   docker network create -d overlay nginx-net-2 
+   docker service update --network-add nginx-net-2 --network-rm nginx-net my-nginx
+7. Run docker service ls to verify that the service has been updated and all tasks have been redeployed. Run docker network inspect nginx-net to verify
+   that no containers are connected to it. Run the same command for nginx-net-2 and notice that all the service task containers are connected to it.
+8. Clean up the service and the networks. From manager, run the following commands. The manager will direct the workers to remove the networks automatically.
+   docker service rm my-nginx
+   docker network rm nginx-net nginx-net-2
+    
